@@ -10,6 +10,8 @@ class GameAssets:
         self.bateau_width = 30
         self.bateau_height = 15
         self.projectile_size = 4
+        self.bouton_width = 100
+        self.bouton_height = 40
 
         # Couleurs
         self.couleur_eau = 5
@@ -17,8 +19,12 @@ class GameAssets:
         self.couleur_projectile = 10
         self.couleur_curseur = 8
         self.couleurs_bateaux = [8, 9, 10, 11, 12, 14, 15]
+        self.couleur_bouton = 11
+        self.couleur_bouton_hover = 10
+        self.couleur_texte = 7
+        self.couleur_commandes = 7
 
-        load(teme, [image])
+        pyxel.load("teme.pyxres")
         # Initialiser les images (à remplacer par de vrais sprites plus tard)
         self.init_images()
 
@@ -70,6 +76,27 @@ class GameAssets:
         pyxel.circ(x, y, taille - 2, 10)
         pyxel.circ(x, y, taille - 4, 7)
 
+    def dessiner_bouton(self, x, y, texte, hover=False):
+        """Dessine un bouton avec du texte"""
+        couleur = self.couleur_bouton_hover if hover else self.couleur_bouton
+
+        # Rectangle du bouton
+        pyxel.rect(x, y, self.bouton_width, self.bouton_height, couleur)
+
+        # Bordure du bouton
+        pyxel.rectb(x, y, self.bouton_width, self.bouton_height, self.couleur_texte)
+
+        # Texte centré
+        text_x = x + (self.bouton_width - len(texte) * 4) // 2
+        text_y = y + (self.bouton_height - 5) // 2
+        pyxel.text(text_x, text_y, texte, self.couleur_texte)
+
+    def dessiner_commandes(self, x, y):
+        """Dessine les instructions des commandes"""
+        pyxel.text(x, y, "COMMANDES:", self.couleur_commandes)
+        pyxel.text(x, y + 10, "Q: Quitter", self.couleur_commandes)
+        pyxel.text(x, y + 20, "Clic gauche: Tirer", self.couleur_commandes)
+
 class JeuBateaux:
     def __init__(self):
         # Initialisation de la fenêtre de jeu
@@ -77,6 +104,16 @@ class JeuBateaux:
 
         # Charger les assets
         self.assets = GameAssets()
+
+        # État du jeu: "accueil" ou "jeu"
+        self.etat = "accueil"
+
+        # Position du bouton de démarrage
+        self.bouton_x = (pyxel.width - self.assets.bouton_width) // 2
+        self.bouton_y = pyxel.height // 2 + 20
+
+        # Bateaux d'arrière-plan pour l'écran d'accueil
+        self.bateaux_accueil = []
 
         # Position du joueur (en bas de l'écran)
         self.joueur_x = pyxel.width // 2
@@ -100,6 +137,49 @@ class JeuBateaux:
 
         # Démarrer le jeu
         pyxel.run(self.update, self.draw)
+
+    def creer_bateau_accueil(self):
+        """Création aléatoire des bateaux pour l'écran d'accueil"""
+        # Un bateau toutes les 20 frames (environ 0.66 seconde)
+        if pyxel.frame_count % 20 == 0:
+            nouveau_bateau = {
+                "x": -30,  # Commence hors de l'écran à gauche
+                "y": random.randint(20, pyxel.height - 50),
+                "largeur": self.assets.bateau_width,
+                "hauteur": self.assets.bateau_height,
+                "vitesse": random.uniform(0.5, 1.5),  # Vitesse aléatoire
+                "couleur": random.choice(self.assets.couleurs_bateaux)  # Couleur aléatoire
+            }
+            self.bateaux_accueil.append(nouveau_bateau)
+
+    def deplacer_bateaux_accueil(self):
+        """Déplacement des bateaux horizontalement et suppression s'ils sortent du cadre"""
+        for bateau in self.bateaux_accueil[:]:
+            # Déplacement horizontal
+            bateau["x"] += bateau["vitesse"]
+
+            # Suppression si le bateau sort de l'écran
+            if bateau["x"] > pyxel.width:
+                self.bateaux_accueil.remove(bateau)
+
+    def verifier_bouton_start(self):
+        """Vérifie si le bouton de démarrage est cliqué"""
+        if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
+            # Vérifier si le clic est sur le bouton
+            if (self.bouton_x <= self.curseur_x <= self.bouton_x + self.assets.bouton_width and
+                self.bouton_y <= self.curseur_y <= self.bouton_y + self.assets.bouton_height):
+                # Changer l'état du jeu
+                self.etat = "jeu"
+                # Réinitialiser les listes pour le jeu
+                self.bateaux = []
+                self.projectiles = []
+                self.explosions = []
+                self.score = 0
+
+    def est_sur_bouton(self):
+        """Vérifie si le curseur est sur le bouton de démarrage"""
+        return (self.bouton_x <= self.curseur_x <= self.bouton_x + self.assets.bouton_width and
+                self.bouton_y <= self.curseur_y <= self.bouton_y + self.assets.bouton_height)
 
     def creer_bateau(self):
         """Création aléatoire des bateaux"""
@@ -202,50 +282,85 @@ class JeuBateaux:
         self.curseur_x = pyxel.mouse_x
         self.curseur_y = pyxel.mouse_y
 
-        # Création des bateaux
-        self.creer_bateau()
+        # Vérifier si la touche Q est pressée pour quitter
+        if pyxel.btnp(pyxel.KEY_Q):
+            pyxel.quit()
 
-        # Déplacement des bateaux
-        self.deplacer_bateaux()
+        if self.etat == "accueil":
+            # Création et déplacement des bateaux d'arrière-plan
+            self.creer_bateau_accueil()
+            self.deplacer_bateaux_accueil()
 
-        # Tirer un projectile
-        self.tirer_projectile()
+            # Vérifier si le bouton de démarrage est cliqué
+            self.verifier_bouton_start()
 
-        # Déplacement des projectiles
-        self.deplacer_projectiles()
+        elif self.etat == "jeu":
+            # Création des bateaux
+            self.creer_bateau()
 
-        # Vérifier les collisions
-        self.verifier_collisions()
+            # Déplacement des bateaux
+            self.deplacer_bateaux()
 
-        # Mettre à jour les explosions
-        self.mettre_a_jour_explosions()
+            # Tirer un projectile
+            self.tirer_projectile()
+
+            # Déplacement des projectiles
+            self.deplacer_projectiles()
+
+            # Vérifier les collisions
+            self.verifier_collisions()
+
+            # Mettre à jour les explosions
+            self.mettre_a_jour_explosions()
 
     def draw(self):
         """Affichage des éléments du jeu"""
         # Dessiner l'eau (fond bleu)
         self.assets.dessiner_eau()
 
-        # Dessiner les bateaux
-        for bateau in self.bateaux:
-            self.assets.dessiner_bateau(bateau["x"], bateau["y"], bateau["couleur"])
+        if self.etat == "accueil":
+            # Dessiner les bateaux d'arrière-plan
+            for bateau in self.bateaux_accueil:
+                self.assets.dessiner_bateau(bateau["x"], bateau["y"], bateau["couleur"])
 
-        # Dessiner le joueur (canon)
-        self.assets.dessiner_joueur(self.joueur_x, self.joueur_y)
+            # Dessiner le titre du jeu
+            pyxel.text(pyxel.width//2 - 40, pyxel.height//4, "JEU DES BATEAUX", 7)
 
-        # Dessiner les projectiles
-        for projectile in self.projectiles:
-            self.assets.dessiner_projectile(projectile["x"], projectile["y"])
+            # Dessiner le bouton de démarrage
+            hover = self.est_sur_bouton()
+            self.assets.dessiner_bouton(self.bouton_x, self.bouton_y, "JOUER", hover)
 
-        # Dessiner les explosions
-        for explosion in self.explosions:
-            taille_actuelle = explosion["taille"] * (1 - explosion["frame"] / explosion["duree"])
-            self.assets.dessiner_explosion(explosion["x"], explosion["y"], taille_actuelle)
+            # Dessiner les commandes
+            self.assets.dessiner_commandes(pyxel.width - 100, pyxel.height - 40)
 
-        # Dessiner le curseur
-        self.assets.dessiner_curseur(self.curseur_x, self.curseur_y)
+            # Dessiner le curseur
+            self.assets.dessiner_curseur(self.curseur_x, self.curseur_y)
 
-        # Afficher le score
-        pyxel.text(5, 5, f"SCORE: {self.score}", 7)
+        elif self.etat == "jeu":
+            # Dessiner les bateaux
+            for bateau in self.bateaux:
+                self.assets.dessiner_bateau(bateau["x"], bateau["y"], bateau["couleur"])
+
+            # Dessiner le joueur (canon)
+            self.assets.dessiner_joueur(self.joueur_x, self.joueur_y)
+
+            # Dessiner les projectiles
+            for projectile in self.projectiles:
+                self.assets.dessiner_projectile(projectile["x"], projectile["y"])
+
+            # Dessiner les explosions
+            for explosion in self.explosions:
+                taille_actuelle = explosion["taille"] * (1 - explosion["frame"] / explosion["duree"])
+                self.assets.dessiner_explosion(explosion["x"], explosion["y"], taille_actuelle)
+
+            # Dessiner le curseur
+            self.assets.dessiner_curseur(self.curseur_x, self.curseur_y)
+
+            # Afficher le score
+            pyxel.text(5, 5, f"SCORE: {self.score}", 7)
+
+            # Dessiner les commandes
+            self.assets.dessiner_commandes(pyxel.width - 100, pyxel.height - 40)
 
 # Lancer le jeu
 if __name__ == "__main__":
