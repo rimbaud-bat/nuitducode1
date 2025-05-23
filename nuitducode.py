@@ -1,4 +1,5 @@
 import pyxel
+import random
 
 class JeuBateaux:
     def __init__(self):
@@ -8,7 +9,7 @@ class JeuBateaux:
         pyxel.load("theme.pyxres")
 
         self.bateaux = []
-        self.vitesse = 1
+        self.vitesse = 1.5
 
         # Initialiser la position des bateaux
         for i in range(3):
@@ -23,10 +24,23 @@ class JeuBateaux:
         self.curseur_x = 0
         self.curseur_y = 0
 
-        # Liste des positions enregistrées lors des clics
-        self.positions_clic = []
+        # Liste des ennemis
+        self.ennemis_liste = []
 
         pyxel.run(self.update, self.draw)
+
+    def ennemis_creation(self):
+        """Création aléatoire des ennemis"""
+        # Un ennemi par seconde
+        if pyxel.frame_count % 30 == 0:
+            self.ennemis_liste.append([0, random.randint(220, pyxel.height)])
+
+    def ennemis_deplacement(self):
+        """Déplacement des ennemis horizontalement et suppression s'ils sortent du cadre"""
+        for ennemi in self.ennemis_liste[:]:
+            ennemi[0] += 1
+            if ennemi[0] > pyxel.width:
+                self.ennemis_liste.remove(ennemi)
 
     def update(self):
         # Mettre à jour la position des bateaux
@@ -39,9 +53,17 @@ class JeuBateaux:
         self.curseur_x = pyxel.mouse_x
         self.curseur_y = pyxel.mouse_y
 
-        # Enregistrer la position lors d'un clic gauche
-        if pyxel.btnp(pyxel.MOUSE_LEFT_BUTTON):
-            self.positions_clic.append((self.curseur_x, self.curseur_y))
+        # Vérifier si un ennemi est cliqué et le supprimer
+        if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
+            for ennemi in self.ennemis_liste[:]:
+                if (self.curseur_x - ennemi[0]) ** 2 + (self.curseur_y - ennemi[1]) ** 2 < 16:  # Rayon de 4 pixels
+                    self.ennemis_liste.remove(ennemi)
+
+        # Création des ennemis
+        self.ennemis_creation()
+
+        # Mise à jour des positions des ennemis
+        self.ennemis_deplacement()
 
     def draw(self):
         pyxel.cls(0)
@@ -51,8 +73,8 @@ class JeuBateaux:
         # Dessiner le curseur (petit carré)
         pyxel.rect(self.curseur_x - 2, self.curseur_y - 2, 5, 5, 8)
 
-        # Dessiner les positions enregistrées (petits cercles)
-        for pos in self.positions_clic:
-            pyxel.circ(pos[0], pos[1], 2, 10)
+        # Dessiner les ennemis
+        for ennemi in self.ennemis_liste:
+            pyxel.rect(ennemi[0], ennemi[1], 8, 8, 8)
 
 JeuBateaux()
