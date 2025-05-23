@@ -2,7 +2,7 @@ import pyxel
 
 class JeuBateaux:
     def __init__(self):
-        pyxel.init(120, 120, title="Jeu des Bateaux")
+        pyxel.init(256, 256, title="Jeu des Bateaux")
 
         # Charger les ressources depuis le fichier theme.pyxres
         pyxel.load("theme.pyxres")
