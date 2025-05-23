@@ -93,9 +93,10 @@ class GameAssets:
 
     def dessiner_commandes(self, x, y):
         """Dessine les instructions des commandes"""
-        pyxel.text(x, y, "COMMANDES:", self.couleur_commandes)
-        pyxel.text(x, y + 10, "Q: Quitter", self.couleur_commandes)
-        pyxel.text(x, y + 20, "Clic gauche: Tirer", self.couleur_commandes)
+        pyxel.rectb(x,y, 80, 40, self.couleur_commandes )
+        pyxel.text(x+5, y + 5, "COMMANDES:", self.couleur_commandes)
+        pyxel.text(x+5, y + 15, "Q: Quitter", self.couleur_commandes)
+        pyxel.text(x+5, y + 25, "Clic gauche: Tirer", self.couleur_commandes)
 
 class JeuBateaux:
     def __init__(self):
