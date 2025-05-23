@@ -3,7 +3,7 @@ import random
 
 class SpaceGame:
     def __init__(self):
-        pyxel.init(160, 120, title="Space Adventure")
+        pyxel.init(256, 256, title="Nuit du code")
 
         # Initialisation du vaisseau
         self.ship_x = 75
