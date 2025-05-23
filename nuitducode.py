@@ -9,7 +9,7 @@ class JeuBateaux:
         pyxel.load("theme.pyxres")
 
         self.bateaux = []
-        self.vitesse = 1.5
+        self.vitesse = 1
 
         # Initialiser la position des bateaux
         for i in range(3):
@@ -33,7 +33,7 @@ class JeuBateaux:
         """Création aléatoire des ennemis"""
         # Un ennemi par seconde
         if pyxel.frame_count % 30 == 0:
-            self.ennemis_liste.append([0, random.randint(220, pyxel.height)])
+            self.ennemis_liste.append([0, random.randint(0, pyxel.height - 20)])
 
     def ennemis_deplacement(self):
         """Déplacement des ennemis horizontalement et suppression s'ils sortent du cadre"""
