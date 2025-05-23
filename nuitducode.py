@@ -101,15 +101,24 @@ class GameAssets:
         pyxel.text(x, y, f"TEMPS: {int(temps_restant)}", couleur)
 
     def dessiner_game_over(self):
-        """Affiche l'écran de game over"""
-        # Fond semi-transparent
-        pyxel.rect(0, 0, pyxel.width, pyxel.height, 0)
-
-        # Texte "GAME OVER" centré
-        texte = "GAME OVER"
-        text_x = (pyxel.width - len(texte) * 4) // 2
-        text_y = pyxel.height // 2
-        pyxel.text(text_x, text_y, texte, 8)  # Rouge
+            """Affiche l'écran de game over"""
+            # Fond semi-transparent
+            pyxel.rect(0, 0, pyxel.width, pyxel.height, 0)
+    
+            # Texte "GAME OVER" centré
+            texte = "non...pas comme ca"
+            text_x = (pyxel.width - len(texte) * 4) // 2
+            text_y = pyxel.height // 2
+            pyxel.text(text_x, text_y, texte, 8)  # Rouge
+    
+        def dessiner_reussite(self):
+            pyxel.rect(0, 0, pyxel.width, pyxel.height, 0)
+    
+            # Texte "GAME OVER" centré
+            texte = "on les à eu !!!"
+            text_x = (pyxel.width - len(texte) * 4) // 2
+            text_y = pyxel.height // 2
+            pyxel.text(text_x, text_y, texte, 8)  # Rouge
 
 class JeuBateaux:
     def __init__(self):
@@ -432,12 +441,17 @@ class JeuBateaux:
             # Afficher le score final
             pyxel.text(5, 5, f"SCORE FINAL: {self.score}", 7)
 
+           pyxel.text(5, 5, f"SCORE FINAL: {self.score}", 7)
+            if self.score > 120:
             # Afficher Game Over
-            self.assets.dessiner_game_over()
-
+                self.assets.dessiner_reussite()
+                hover = self.est_sur_bouton()
+                self.assets.dessiner_bouton(self.bouton_x, self.bouton_y, "On peut pas les laisser impunis...", hover)
+            else :
+                self.assets.dessiner_game_over()
             # Dessiner le bouton pour recommencer
-            hover = self.est_sur_bouton()
-            self.assets.dessiner_bouton(self.bouton_x, self.bouton_y, "REJOUER", hover)
+                hover = self.est_sur_bouton()
+                self.assets.dessiner_bouton(self.bouton_x, self.bouton_y, "Rattrapons les", hover)
 
             # Dessiner le curseur
             self.assets.dessiner_curseur(self.curseur_x, self.curseur_y)
