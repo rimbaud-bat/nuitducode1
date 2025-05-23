@@ -265,9 +265,14 @@ class JeuBateaux:
                     if projectile in self.projectiles:
                         self.projectiles.remove(projectile)
                     if bateau in self.bateaux:
+                        # Ajouter 20 points si la vitesse du bateau est supérieure à 1.5, sinon ajouter 10 points
+                        if bateau["vitesse"] > 1.5:
+                            self.score += 20
+                        else:
+                            self.score += 10
                         self.bateaux.remove(bateau)
-                        self.score += 10
                     break
+
 
     def mettre_a_jour_explosions(self):
         """Mettre à jour l'état des explosions"""
