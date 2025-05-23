@@ -96,10 +96,10 @@ class GameAssets:
 
     def dessiner_commandes(self, x, y):
         """Dessine les instructions des commandes"""
-        pyxel.text(x-150, y+30, "COMMANDES:", self.couleur_commandes)
-        pyxel.text(x-80, y+30 , "Q: Quitter", self.couleur_commandes)
-        pyxel.text(x-10, y+30 , "Clic gauche: Tirer", self.couleur_commandes)
-        pyxel.text(x+80, y+30 , "Flèches: Déplacer", self.couleur_commandes)
+        pyxel.text(x-150, y+20, "COMMANDES:", self.couleur_commandes)
+        pyxel.text(x-90, y+20 , "Q: Quitter", self.couleur_commandes)
+        pyxel.text(x-75, y+30 , "Clic gauche: Tirer", self.couleur_commandes)
+        pyxel.text(x-35, y+20 , "Fleches: Deplacer", self.couleur_commandes)
 
     def dessiner_timer(self, x, y, temps_restant, temps_total=100):
         """Dessine le timer avec changement de couleur pour les 10 dernières secondes"""
@@ -434,9 +434,6 @@ class JeuBateaux:
 
             # Afficher le timer
             self.assets.dessiner_timer(pyxel.width - 60, 5, self.temps_restant)
-
-            # Dessiner les commandes
-            self.assets.dessiner_commandes(pyxel.width - 100, pyxel.height - 40)
 
         elif self.etat == "game_over":
             # Dessiner les bateaux
