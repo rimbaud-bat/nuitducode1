@@ -18,6 +18,7 @@ class GameAssets:
         self.couleur_curseur = 8
         self.couleurs_bateaux = [8, 9, 10, 11, 12, 14, 15]
 
+        load(teme, [image])
         # Initialiser les images (à remplacer par de vrais sprites plus tard)
         self.init_images()
 
