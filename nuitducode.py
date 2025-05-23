@@ -23,6 +23,8 @@ class GameAssets:
         self.couleur_bouton_hover = 10
         self.couleur_texte = 7
         self.couleur_commandes = 7
+        self.couleur_timer = 7
+        self.couleur_timer_alerte = 8  # Rouge pour les 10 dernières secondes
 
         pyxel.load("teme.pyxres")
         # Initialiser les images (à remplacer par de vrais sprites plus tard)
@@ -96,6 +98,26 @@ class GameAssets:
         pyxel.text(x-150, y+30, "COMMANDES:", self.couleur_commandes)
         pyxel.text(x-80, y+30 , "Q: Quitter", self.couleur_commandes)
         pyxel.text(x-10, y+30 , "Clic gauche: Tirer", self.couleur_commandes)
+        pyxel.text(x+80, y+30 , "Flèches: Déplacer", self.couleur_commandes)
+
+    def dessiner_timer(self, x, y, temps_restant, temps_total=100):
+        """Dessine le timer avec changement de couleur pour les 10 dernières secondes"""
+        # Choisir la couleur en fonction du temps restant
+        couleur = self.couleur_timer_alerte if temps_restant <= 10 else self.couleur_timer
+
+        # Afficher le temps restant
+        pyxel.text(x, y, f"TEMPS: {int(temps_restant)}", couleur)
+
+    def dessiner_game_over(self):
+        """Affiche l'écran de game over"""
+        # Fond semi-transparent
+        pyxel.rect(0, 0, pyxel.width, pyxel.height, 0)
+
+        # Texte "GAME OVER" centré
+        texte = "GAME OVER"
+        text_x = (pyxel.width - len(texte) * 4) // 2
+        text_y = pyxel.height // 2
+        pyxel.text(text_x, text_y, texte, 8)  # Rouge
 
 class JeuBateaux:
     def __init__(self):
@@ -105,7 +127,7 @@ class JeuBateaux:
         # Charger les assets
         self.assets = GameAssets()
 
-        # État du jeu: "accueil" ou "jeu"
+        # État du jeu: "accueil", "jeu" ou "game_over"
         self.etat = "accueil"
 
         # Position du bouton de démarrage
@@ -118,6 +140,9 @@ class JeuBateaux:
         # Position du joueur (en bas de l'écran)
         self.joueur_x = pyxel.width // 2
         self.joueur_y = pyxel.height - 20
+
+        # Vitesse de déplacement du joueur
+        self.joueur_vitesse = 3
 
         # Position du curseur
         self.curseur_x = 0
@@ -134,6 +159,10 @@ class JeuBateaux:
 
         # Score
         self.score = 0
+
+        # Timer
+        self.temps_total = 15  # 100 secondes
+        self.temps_restant = self.temps_total
 
         # Démarrer le jeu
         pyxel.run(self.update, self.draw)
@@ -175,6 +204,8 @@ class JeuBateaux:
                 self.projectiles = []
                 self.explosions = []
                 self.score = 0
+                # Réinitialiser le timer
+                self.temps_restant = self.temps_total
 
     def est_sur_bouton(self):
         """Vérifie si le curseur est sur le bouton de démarrage"""
@@ -206,6 +237,16 @@ class JeuBateaux:
             # Suppression si le bateau sort de l'écran
             if bateau["x"] > pyxel.width:
                 self.bateaux.remove(bateau)
+
+    def deplacer_joueur(self):
+        """Déplacement du joueur avec les touches du clavier"""
+        # Déplacement vers la gauche avec la flèche gauche
+        if pyxel.btn(pyxel.KEY_LEFT) or pyxel.btn(pyxel.KEY_A):
+            self.joueur_x = max(self.joueur_x - self.joueur_vitesse, self.assets.joueur_width // 2)
+
+        # Déplacement vers la droite avec la flèche droite
+        if pyxel.btn(pyxel.KEY_RIGHT) or pyxel.btn(pyxel.KEY_D):
+            self.joueur_x = min(self.joueur_x + self.joueur_vitesse, pyxel.width - self.assets.joueur_width // 2)
 
     def tirer_projectile(self):
         """Envoie un projectile depuis le joueur vers la direction du curseur"""
@@ -273,13 +314,22 @@ class JeuBateaux:
                         self.bateaux.remove(bateau)
                     break
 
-
     def mettre_a_jour_explosions(self):
         """Mettre à jour l'état des explosions"""
         for explosion in self.explosions[:]:
             explosion["frame"] += 1
             if explosion["frame"] >= explosion["duree"]:
                 self.explosions.remove(explosion)
+
+    def mettre_a_jour_timer(self):
+        """Mettre à jour le timer et vérifier s'il est écoulé"""
+        # Décrémenter le timer (30 FPS, donc 1/30 seconde par frame)
+        self.temps_restant -= 1/30
+
+        # Vérifier si le timer est écoulé
+        if self.temps_restant <= 0:
+            self.temps_restant = 0
+            self.etat = "game_over"
 
     def update(self):
         """Mise à jour de l'état du jeu"""
@@ -306,6 +356,9 @@ class JeuBateaux:
             # Déplacement des bateaux
             self.deplacer_bateaux()
 
+            # Déplacement du joueur
+            self.deplacer_joueur()
+
             # Tirer un projectile
             self.tirer_projectile()
 
@@ -317,6 +370,13 @@ class JeuBateaux:
 
             # Mettre à jour les explosions
             self.mettre_a_jour_explosions()
+
+            # Mettre à jour le timer
+            self.mettre_a_jour_timer()
+
+        elif self.etat == "game_over":
+            # Vérifier si le bouton de démarrage est cliqué pour recommencer
+            self.verifier_bouton_start()
 
     def draw(self):
         """Affichage des éléments du jeu"""
@@ -364,8 +424,32 @@ class JeuBateaux:
             # Afficher le score
             pyxel.text(5, 5, f"SCORE: {self.score}", 7)
 
+            # Afficher le timer
+            self.assets.dessiner_timer(pyxel.width - 60, 5, self.temps_restant)
+
             # Dessiner les commandes
             self.assets.dessiner_commandes(pyxel.width - 100, pyxel.height - 40)
+
+        elif self.etat == "game_over":
+            # Dessiner les bateaux
+            for bateau in self.bateaux:
+                self.assets.dessiner_bateau(bateau["x"], bateau["y"], bateau["couleur"])
+
+            # Dessiner le joueur (canon)
+            self.assets.dessiner_joueur(self.joueur_x, self.joueur_y)
+
+            # Afficher le score final
+            pyxel.text(5, 5, f"SCORE FINAL: {self.score}", 7)
+
+            # Afficher Game Over
+            self.assets.dessiner_game_over()
+
+            # Dessiner le bouton pour recommencer
+            hover = self.est_sur_bouton()
+            self.assets.dessiner_bouton(self.bouton_x, self.bouton_y, "REJOUER", hover)
+
+            # Dessiner le curseur
+            self.assets.dessiner_curseur(self.curseur_x, self.curseur_y)
 
 # Lancer le jeu
 if __name__ == "__main__":
