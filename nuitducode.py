@@ -162,7 +162,7 @@ class JeuBateaux:
         self.score = 0
 
         # Timer
-        self.temps_total = 15  # 100 secondes
+        self.temps_total = 60  # 100 secondes
         self.temps_restant = self.temps_total
 
         # Démarrer le jeu
@@ -442,7 +442,7 @@ class JeuBateaux:
             pyxel.text(5, 5, f"SCORE FINAL: {self.score}", 7)
 
             pyxel.text(5, 5, f"SCORE FINAL: {self.score}", 7)
-            if self.score > 120:
+            if self.score > 1000:
             # Afficher Game Over
                 self.assets.dessiner_reussite()
                 hover = self.est_sur_bouton()
