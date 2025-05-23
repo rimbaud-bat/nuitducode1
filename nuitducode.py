@@ -104,21 +104,21 @@ class GameAssets:
             """Affiche l'écran de game over"""
             # Fond semi-transparent
             pyxel.rect(0, 0, pyxel.width, pyxel.height, 0)
-    
+
             # Texte "GAME OVER" centré
             texte = "non...pas comme ca"
             text_x = (pyxel.width - len(texte) * 4) // 2
             text_y = pyxel.height // 2
             pyxel.text(text_x, text_y, texte, 8)  # Rouge
-    
-        def dessiner_reussite(self):
-            pyxel.rect(0, 0, pyxel.width, pyxel.height, 0)
-    
-            # Texte "GAME OVER" centré
-            texte = "on les à eu !!!"
-            text_x = (pyxel.width - len(texte) * 4) // 2
-            text_y = pyxel.height // 2
-            pyxel.text(text_x, text_y, texte, 8)  # Rouge
+
+    def dessiner_reussite(self):
+        pyxel.rect(0, 0, pyxel.width, pyxel.height, 0)
+
+        # Texte "GAME OVER" centré
+        texte = "on les à eu !!!"
+        text_x = (pyxel.width - len(texte) * 4) // 2
+        text_y = pyxel.height // 2
+        pyxel.text(text_x, text_y, texte, 8)  # Rouge
 
 class JeuBateaux:
     def __init__(self):
@@ -391,7 +391,7 @@ class JeuBateaux:
 
             # Dessiner le titre du jeu
             pyxel.text(pyxel.width//2- 55 , pyxel.height//4, "PREMIERE BATAILLE DE LEMNOS", 7)
-            
+
             # Dessiner le bouton de démarrage
             hover = self.est_sur_bouton()
             self.assets.dessiner_bouton(self.bouton_x, self.bouton_y, "JOUER", hover)
@@ -441,12 +441,12 @@ class JeuBateaux:
             # Afficher le score final
             pyxel.text(5, 5, f"SCORE FINAL: {self.score}", 7)
 
-           pyxel.text(5, 5, f"SCORE FINAL: {self.score}", 7)
+            pyxel.text(5, 5, f"SCORE FINAL: {self.score}", 7)
             if self.score > 120:
             # Afficher Game Over
                 self.assets.dessiner_reussite()
                 hover = self.est_sur_bouton()
-                self.assets.dessiner_bouton(self.bouton_x, self.bouton_y, "On peut pas les laisser impunis...", hover)
+                self.assets.dessiner_bouton(self.bouton_x, self.bouton_y, "On peut pas les \n laisser impunis...", hover)
             else :
                 self.assets.dessiner_game_over()
             # Dessiner le bouton pour recommencer
