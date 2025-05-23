@@ -92,7 +92,7 @@ class GameAssets:
         pyxel.text(text_x, text_y, texte, self.couleur_texte)
 
     def dessiner_commandes(self, x, y):
-        """Dessine les instructions des commandes""" 
+        """Dessine les instructions des commandes"""
         pyxel.text(x-150, y+30, "COMMANDES:", self.couleur_commandes)
         pyxel.text(x-80, y+30 , "Q: Quitter", self.couleur_commandes)
         pyxel.text(x-10, y+30 , "Clic gauche: Tirer", self.couleur_commandes)
@@ -329,7 +329,7 @@ class JeuBateaux:
                 self.assets.dessiner_bateau(bateau["x"], bateau["y"], bateau["couleur"])
 
             # Dessiner le titre du jeu
-            pyxel.text(pyxel.width//2 - 40, pyxel.height//4, "JEU DES BATEAUX", 7)
+            pyxel.text(pyxel.width//2- 55 , pyxel.height//4, "PREMIERE BATAILLE DE LEMNOS", 7)
 
             # Dessiner le bouton de démarrage
             hover = self.est_sur_bouton()
