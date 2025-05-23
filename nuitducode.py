@@ -27,6 +27,7 @@ class GameAssets:
         self.couleur_timer_alerte = 8  # Rouge pour les 10 dernières secondes
 
         pyxel.load("teme.pyxres")
+        pyxel.load("main.pyxres")
         # Initialiser les images (à remplacer par de vrais sprites plus tard)
         self.init_images()
 
@@ -129,6 +130,7 @@ class JeuBateaux:
 
         # État du jeu: "accueil", "jeu" ou "game_over"
         self.etat = "accueil"
+        pyxel.playm(0, loop=True)
 
         # Position du bouton de démarrage
         self.bouton_x = (pyxel.width - self.assets.bouton_width) // 2
@@ -161,7 +163,7 @@ class JeuBateaux:
         self.score = 0
 
         # Timer
-        self.temps_total = 15  # 100 secondes
+        self.temps_total = 100  # 100 secondes
         self.temps_restant = self.temps_total
 
         # Démarrer le jeu
@@ -199,6 +201,8 @@ class JeuBateaux:
                 self.bouton_y <= self.curseur_y <= self.bouton_y + self.assets.bouton_height):
                 # Changer l'état du jeu
                 self.etat = "jeu"
+                pyxel.stop()
+                pyxel.playm(3, loop=True)
                 # Réinitialiser les listes pour le jeu
                 self.bateaux = []
                 self.projectiles = []
@@ -301,6 +305,7 @@ class JeuBateaux:
                         "duree": 10,
                         "frame": 0
                     })
+                    pyxel.play(3,3)
 
                     # Supprimer le projectile et le bateau
                     if projectile in self.projectiles:
@@ -311,7 +316,9 @@ class JeuBateaux:
                             self.score += 20
                         else:
                             self.score += 10
-                        self.bateaux.remove(bateau)
+                            self.bateaux.remove(bateau)
+                            if self.score % 100 == 0:
+                                pyxel.play(4, 2)
                     break
 
     def mettre_a_jour_explosions(self):
@@ -326,6 +333,7 @@ class JeuBateaux:
         # Décrémenter le timer (30 FPS, donc 1/30 seconde par frame)
         self.temps_restant -= 1/30
 
+        
         # Vérifier si le timer est écoulé
         if self.temps_restant <= 0:
             self.temps_restant = 0
