@@ -6,7 +6,7 @@ class GameAssets:
     def __init__(self):
         # Dimensions des sprites
         self.joueur_width = 16
-        self.joueur_height = 16
+        self.joueur_height = 30
         self.bateau_width = 30
         self.bateau_height = 15
         self.projectile_size = 4
@@ -39,19 +39,11 @@ class GameAssets:
     def dessiner_joueur(self, x, y):
         """Dessine le joueur (canon) à la position spécifiée"""
         # Pour l'instant, un simple rectangle
-        pyxel.rect(x - self.joueur_width//2, y - self.joueur_height//2,
-                  self.joueur_width, self.joueur_height, self.couleur_joueur)
-
-        # Dessiner le canon pointant vers le haut
-        pyxel.rect(x - 4, y - self.joueur_height//2 - 8, 8, 8, self.couleur_joueur)
+        pyxel.blt(x - self.joueur_width//2, y - self.joueur_height//2,0,46,44,12,20)
 
     def dessiner_bateau(self, x, y, couleur):
         """Dessine un bateau à la position spécifiée"""
-        # Corps principal du bateau
-        pyxel.rect(x, y, self.bateau_width, self.bateau_height, couleur)
-
-        # Détails du bateau (cabine)
-        pyxel.rect(x + 10, y - 5, 10, 5, couleur + 1)
+        pyxel.blt(x,y,1,0,0,29,24)
 
     def dessiner_projectile(self, x, y):
         """Dessine un projectile à la position spécifiée"""
