@@ -1,111 +1,251 @@
 import pyxel
 import random
+import math
+
+class GameAssets:
+    def __init__(self):
+        # Dimensions des sprites
+        self.joueur_width = 16
+        self.joueur_height = 16
+        self.bateau_width = 30
+        self.bateau_height = 15
+        self.projectile_size = 4
+
+        # Couleurs
+        self.couleur_eau = 5
+        self.couleur_joueur = 7
+        self.couleur_projectile = 10
+        self.couleur_curseur = 8
+        self.couleurs_bateaux = [8, 9, 10, 11, 12, 14, 15]
+
+        # Initialiser les images (à remplacer par de vrais sprites plus tard)
+        self.init_images()
+
+    def init_images(self):
+        """Initialise les images pour le jeu"""
+        # Cette méthode sera utilisée pour charger des images externes plus tard
+        # Pour l'instant, nous définissons des fonctions de dessin simples
+        pass
+
+    def dessiner_joueur(self, x, y):
+        """Dessine le joueur (canon) à la position spécifiée"""
+        # Pour l'instant, un simple rectangle
+        pyxel.rect(x - self.joueur_width//2, y - self.joueur_height//2,
+                  self.joueur_width, self.joueur_height, self.couleur_joueur)
+
+        # Dessiner le canon pointant vers le haut
+        pyxel.rect(x - 4, y - self.joueur_height//2 - 8, 8, 8, self.couleur_joueur)
+
+    def dessiner_bateau(self, x, y, couleur):
+        """Dessine un bateau à la position spécifiée"""
+        # Corps principal du bateau
+        pyxel.rect(x, y, self.bateau_width, self.bateau_height, couleur)
+
+        # Détails du bateau (cabine)
+        pyxel.rect(x + 10, y - 5, 10, 5, couleur + 1)
+
+    def dessiner_projectile(self, x, y):
+        """Dessine un projectile à la position spécifiée"""
+        pyxel.circ(x, y, self.projectile_size//2, self.couleur_projectile)
+
+    def dessiner_curseur(self, x, y):
+        """Dessine le curseur à la position spécifiée"""
+        pyxel.circ(x, y, 3, self.couleur_curseur)
+        # Croix au centre du curseur
+        pyxel.line(x-2, y, x+2, y, 7)
+        pyxel.line(x, y-2, x, y+2, 7)
+
+    def dessiner_eau(self):
+        """Dessine l'arrière-plan d'eau"""
+        pyxel.rect(0, 0, pyxel.width, pyxel.height, self.couleur_eau)
+
+        # Ajouter quelques vagues (lignes horizontales plus claires)
+        for y in range(20, pyxel.height, 40):
+            pyxel.line(0, y, pyxel.width, y, 6)
+
+    def dessiner_explosion(self, x, y, taille):
+        """Dessine une explosion à la position spécifiée"""
+        pyxel.circ(x, y, taille, 8)
+        pyxel.circ(x, y, taille - 2, 10)
+        pyxel.circ(x, y, taille - 4, 7)
 
 class JeuBateaux:
     def __init__(self):
+        # Initialisation de la fenêtre de jeu
         pyxel.init(256, 256, title="Jeu des Bateaux")
 
-        # Charger les ressources depuis le fichier theme.pyxres
-        pyxel.load("theme.pyxres")
+        # Charger les assets
+        self.assets = GameAssets()
 
-        self.bateaux = []
-        self.vitesse = 1
-
-        # Initialiser la position des bateaux
-        for i in range(3):
-            self.bateaux.append({
-                "x": -i * 60,
-                "y": 30,
-                "largeur": 40,
-                "hauteur": 20
-            })
+        # Position du joueur (en bas de l'écran)
+        self.joueur_x = pyxel.width // 2
+        self.joueur_y = pyxel.height - 20
 
         # Position du curseur
         self.curseur_x = 0
         self.curseur_y = 0
 
-        # Liste des ennemis
-        self.ennemis_liste = []
+        # Liste des bateaux
+        self.bateaux = []
 
         # Liste des projectiles
-        self.projectiles_liste = []
+        self.projectiles = []
 
+        # Liste des explosions
+        self.explosions = []
+
+        # Score
+        self.score = 0
+
+        # Démarrer le jeu
         pyxel.run(self.update, self.draw)
 
-    def ennemis_creation(self):
-        """Création aléatoire des ennemis"""
-        # Un ennemi par seconde
+    def creer_bateau(self):
+        """Création aléatoire des bateaux"""
+        # Un bateau toutes les 30 frames (environ 1 seconde)
         if pyxel.frame_count % 30 == 0:
-            self.ennemis_liste.append([0, random.randint(20, pyxel.height - 20)])
+            # Les bateaux apparaissent à gauche de l'écran à une hauteur aléatoire
+            # mais pas trop bas pour éviter qu'ils soient trop près du joueur
+            nouveau_bateau = {
+                "x": -30,  # Commence hors de l'écran à gauche
+                "y": random.randint(20, pyxel.height // 2),
+                "largeur": self.assets.bateau_width,
+                "hauteur": self.assets.bateau_height,
+                "vitesse": random.uniform(0.5, 2.0),  # Vitesse aléatoire
+                "couleur": random.choice(self.assets.couleurs_bateaux)  # Couleur aléatoire
+            }
+            self.bateaux.append(nouveau_bateau)
 
-    def ennemis_deplacement(self):
-        """Déplacement des ennemis horizontalement et suppression s'ils sortent du cadre"""
-        for ennemi in self.ennemis_liste[:]:
-            ennemi[0] += 1
-            if ennemi[0] > pyxel.width:
-                self.ennemis_liste.remove(ennemi)
+    def deplacer_bateaux(self):
+        """Déplacement des bateaux horizontalement et suppression s'ils sortent du cadre"""
+        for bateau in self.bateaux[:]:
+            # Déplacement horizontal
+            bateau["x"] += bateau["vitesse"]
+
+            # Suppression si le bateau sort de l'écran
+            if bateau["x"] > pyxel.width:
+                self.bateaux.remove(bateau)
 
     def tirer_projectile(self):
-        """Envoie un projectile depuis le curseur"""
+        """Envoie un projectile depuis le joueur vers la direction du curseur"""
         if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
-            self.projectiles_liste.append([self.curseur_x, self.curseur_y, self.curseur_y])  # Stocker la position y de la cible
+            # Calculer la direction vers le curseur
+            dx = self.curseur_x - self.joueur_x
+            dy = self.curseur_y - self.joueur_y
+
+            # Normaliser le vecteur de direction
+            distance = math.sqrt(dx**2 + dy**2)
+            if distance > 0:
+                dx /= distance
+                dy /= distance
+
+            # Créer un nouveau projectile
+            nouveau_projectile = {
+                "x": self.joueur_x,
+                "y": self.joueur_y,
+                "dx": dx * 4,  # Vitesse horizontale
+                "dy": dy * 4,  # Vitesse verticale
+                "taille": self.assets.projectile_size
+            }
+            self.projectiles.append(nouveau_projectile)
 
     def deplacer_projectiles(self):
-        """Déplacement des projectiles et suppression s'ils sortent du cadre"""
-        for projectile in self.projectiles_liste[:]:
-            # Déplacement vertical vers la position y de la cible
-            if projectile[1] < projectile[2]:
-                projectile[1] += 2
-            elif projectile[1] > projectile[2]:
-                projectile[1] -= 2
+        """Déplacement des projectiles selon leur trajectoire et suppression s'ils sortent du cadre"""
+        for projectile in self.projectiles[:]:
+            # Déplacement selon la direction
+            projectile["x"] += projectile["dx"]
+            projectile["y"] += projectile["dy"]
 
-            # Suppression si le projectile atteint la cible ou sort du cadre
-            if abs(projectile[1] - projectile[2]) < 2 or projectile[1] < 0 or projectile[1] > pyxel.height:
-                self.projectiles_liste.remove(projectile)
+            # Suppression si le projectile sort du cadre
+            if (projectile["x"] < 0 or projectile["x"] > pyxel.width or
+                projectile["y"] < 0 or projectile["y"] > pyxel.height):
+                self.projectiles.remove(projectile)
+
+    def verifier_collisions(self):
+        """Vérifier les collisions entre projectiles et bateaux"""
+        for projectile in self.projectiles[:]:
+            for bateau in self.bateaux[:]:
+                # Vérifier si le projectile touche un bateau
+                if (projectile["x"] > bateau["x"] and
+                    projectile["x"] < bateau["x"] + bateau["largeur"] and
+                    projectile["y"] > bateau["y"] and
+                    projectile["y"] < bateau["y"] + bateau["hauteur"]):
+
+                    # Créer une explosion
+                    self.explosions.append({
+                        "x": projectile["x"],
+                        "y": projectile["y"],
+                        "taille": 10,
+                        "duree": 10,
+                        "frame": 0
+                    })
+
+                    # Supprimer le projectile et le bateau
+                    if projectile in self.projectiles:
+                        self.projectiles.remove(projectile)
+                    if bateau in self.bateaux:
+                        self.bateaux.remove(bateau)
+                        self.score += 10
+                    break
+
+    def mettre_a_jour_explosions(self):
+        """Mettre à jour l'état des explosions"""
+        for explosion in self.explosions[:]:
+            explosion["frame"] += 1
+            if explosion["frame"] >= explosion["duree"]:
+                self.explosions.remove(explosion)
 
     def update(self):
-        # Mettre à jour la position des bateaux
-        for bateau in self.bateaux:
-            bateau["x"] += self.vitesse
-            if bateau["x"] > pyxel.width:
-                bateau["x"] = -bateau["largeur"]
-
+        """Mise à jour de l'état du jeu"""
         # Mettre à jour la position du curseur
         self.curseur_x = pyxel.mouse_x
         self.curseur_y = pyxel.mouse_y
 
-        # Vérifier si un ennemi est cliqué et le supprimer
-        if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
-            for ennemi in self.ennemis_liste[:]:
-                if (self.curseur_x - ennemi[0]) ** 2 + (self.curseur_y - ennemi[1]) ** 2 < 100:  # Rayon de 10 pixels
-                    self.ennemis_liste.remove(ennemi)
+        # Création des bateaux
+        self.creer_bateau()
+
+        # Déplacement des bateaux
+        self.deplacer_bateaux()
 
         # Tirer un projectile
         self.tirer_projectile()
 
-        # Déplacer les projectiles
+        # Déplacement des projectiles
         self.deplacer_projectiles()
 
-        # Création des ennemis
-        self.ennemis_creation()
+        # Vérifier les collisions
+        self.verifier_collisions()
 
-        # Mise à jour des positions des ennemis
-        self.ennemis_deplacement()
+        # Mettre à jour les explosions
+        self.mettre_a_jour_explosions()
 
     def draw(self):
-        pyxel.cls(0)
+        """Affichage des éléments du jeu"""
+        # Dessiner l'eau (fond bleu)
+        self.assets.dessiner_eau()
+
+        # Dessiner les bateaux
         for bateau in self.bateaux:
-            pyxel.blt(bateau["x"], bateau["y"], 0, 0, 0, bateau["largeur"], bateau["hauteur"])
+            self.assets.dessiner_bateau(bateau["x"], bateau["y"], bateau["couleur"])
 
-        # Dessiner le curseur (petit carré)
-        pyxel.rect(self.curseur_x - 2, self.curseur_y - 2, 5, 5, 8)
-
-        # Dessiner les ennemis
-        for ennemi in self.ennemis_liste:
-            pyxel.rect(ennemi[0], ennemi[1], 8, 8, 8)
+        # Dessiner le joueur (canon)
+        self.assets.dessiner_joueur(self.joueur_x, self.joueur_y)
 
         # Dessiner les projectiles
-        for projectile in self.projectiles_liste:
-            pyxel.rect(projectile[0], projectile[1], 4, 4, 10)
+        for projectile in self.projectiles:
+            self.assets.dessiner_projectile(projectile["x"], projectile["y"])
 
-JeuBateaux()
+        # Dessiner les explosions
+        for explosion in self.explosions:
+            taille_actuelle = explosion["taille"] * (1 - explosion["frame"] / explosion["duree"])
+            self.assets.dessiner_explosion(explosion["x"], explosion["y"], taille_actuelle)
+
+        # Dessiner le curseur
+        self.assets.dessiner_curseur(self.curseur_x, self.curseur_y)
+
+        # Afficher le score
+        pyxel.text(5, 5, f"SCORE: {self.score}", 7)
+
+# Lancer le jeu
+if __name__ == "__main__":
+    JeuBateaux()
